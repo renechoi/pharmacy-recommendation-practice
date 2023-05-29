@@ -16,6 +16,7 @@ import com.example.project.api.dto.KakaoApiResponseDto;
 import com.example.project.api.service.KakaoAddressSearchService;
 import com.example.project.direction.dto.OutputDto;
 import com.example.project.direction.entity.Direction;
+import com.example.project.direction.service.Base62Service;
 import com.example.project.direction.service.DirectionService;
 
 @Service
@@ -27,6 +28,7 @@ public class PharmacyRecommendationService {
 
 	private final KakaoAddressSearchService kakaoAddressSearchService;
 	private final DirectionService directionService;
+	private final Base62Service base62Service;
 
 	@Value("${pharmacy.recommendation.base.url}")
 	private String baseUrl;
@@ -42,8 +44,8 @@ public class PharmacyRecommendationService {
 
 		DocumentDto documentDto = kakaoApiResponseDto.getDocumentList().get(0);
 
-		// List<Direction> directionList = directionService.buildDirectionList(documentDto);
-		List<Direction> directionList = directionService.buildDirectionListByCategoryApi(documentDto);
+		List<Direction> directionList = directionService.buildDirectionList(documentDto);
+		//List<Direction> directionList = directionService.buildDirectionListByCategoryApi(documentDto);
 
 		return directionService.saveAll(directionList)
 			.stream()
@@ -56,7 +58,7 @@ public class PharmacyRecommendationService {
 		return OutputDto.builder()
 			.pharmacyName(direction.getTargetPharmacyName())
 			.pharmacyAddress(direction.getTargetAddress())
-			.directionUrl(baseUrl)
+			.directionUrl(baseUrl + base62Service.encodeDirectionId(direction.getId()))
 			.roadViewUrl(ROAD_VIEW_BASE_URL + direction.getTargetLatitude() + "," + direction.getTargetLongitude())
 			.distance(String.format("%.2f km", direction.getDistance()))
 			.build();

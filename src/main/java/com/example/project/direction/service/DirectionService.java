@@ -1,5 +1,12 @@
 package com.example.project.direction.service;
 
+import com.example.project.api.dto.DocumentDto;
+import com.example.project.api.service.KakaoCategorySearchService;
+import com.example.project.direction.entity.Direction;
+import com.example.project.direction.repository.DirectionRepository;
+import com.example.project.direction.service.Base62Service;
+import com.example.project.pharmacy.service.PharmacySearchService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,12 +20,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.example.project.api.dto.DocumentDto;
-import com.example.project.api.service.KakaoCategorySearchService;
-import com.example.project.direction.entity.Direction;
-import com.example.project.direction.repository.DirectionRepository;
-import com.example.project.pharmacy.service.PharmacySearchService;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class DirectionService {
 
 	private final PharmacySearchService pharmacySearchService;
 	private final DirectionRepository directionRepository;
+	private final Base62Service base62Service;
 
 	private final KakaoCategorySearchService kakaoCategorySearchService;
 
@@ -37,6 +39,20 @@ public class DirectionService {
 	public List<Direction> saveAll(List<Direction> directionList) {
 		if (CollectionUtils.isEmpty(directionList)) return Collections.emptyList();
 		return directionRepository.saveAll(directionList);
+	}
+
+	@Transactional(readOnly = true)
+	public String findDirectionUrlById(String encodedId) {
+
+		Long decodedId = base62Service.decodeDirectionId(encodedId);
+		Direction direction = directionRepository.findById(decodedId).orElse(null);
+
+		String params = String.join(",", direction.getTargetPharmacyName(),
+			String.valueOf(direction.getTargetLatitude()), String.valueOf(direction.getTargetLongitude()));
+		String result = UriComponentsBuilder.fromHttpUrl(DIRECTION_BASE_URL + params)
+			.toUriString();
+
+		return result;
 	}
 
 	public List<Direction> buildDirectionList(DocumentDto documentDto) {
