@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.example.project.api.dto.DocumentDto;
 import com.example.project.direction.entity.Direction;
+import com.example.project.direction.repository.DirectionRepository;
 import com.example.project.pharmacy.service.PharmacySearchService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,16 @@ public class DirectionService {
 	private static final String DIRECTION_BASE_URL = "https://map.kakao.com/link/map/";
 
 	private final PharmacySearchService pharmacySearchService;
+	private final DirectionRepository directionRepository;
+
+
+	@Transactional
+	public List<Direction> saveAll(List<Direction> directionList) {
+		if (CollectionUtils.isEmpty(directionList)) return Collections.emptyList();
+		return directionRepository.saveAll(directionList);
+	}
+
+
 
 	public List<Direction> buildDirectionList(DocumentDto documentDto) {
 		if(Objects.isNull(documentDto)) return Collections.emptyList();
